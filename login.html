@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ReplyRaven is your calm, intelligent workspace for Google reviews. Unlimited locations. Thoughtful AI replies. Your own Google Sheet."
+    />
+    <meta name="theme-color" content="#7c5ce5" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>Welcome back · ReplyRaven</title>
+    <link rel="icon" type="image/svg+xml" href="assets/raven.svg" />
+    <script src="auth.js" data-page="login"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script>
+      if (window.tailwind)
+        tailwind.config = {
+          darkMode: 'class',
+          theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } },
+        };
+    </script>
+    <script defer src="assets/lucide.min.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body class="auth-page" data-page="login">
+    <a class="skip-link" href="#main">Skip to sign in</a>
+    <section class="login-story">
+      <a class="logo" href="index.html" aria-label="ReplyRaven home"
+        ><img src="assets/raven.svg" alt="" width="40" height="40" /><span>Reply<span>Raven</span></span></a
+      >
+      <div class="story-content">
+        <div class="eyebrow">Your reputation, thoughtfully managed.</div>
+        <h2>Take care of business.<br />We'll take care of<br /><span>the follow-up.</span></h2>
+        <p>A little less busywork. A little more connection. Your calm corner of customer care.</p>
+        <div class="story-review">
+          <div class="flex items-center gap-3">
+            <span class="avatar">SM</span>
+            <div>
+              <strong>Sophie Martinez</strong
+              ><span class="stars"
+                ><i data-lucide="star" class="icon" aria-hidden="true"></i
+                ><i data-lucide="star" class="icon" aria-hidden="true"></i
+                ><i data-lucide="star" class="icon" aria-hidden="true"></i
+                ><i data-lucide="star" class="icon" aria-hidden="true"></i
+                ><i data-lucide="star" class="icon" aria-hidden="true"></i
+              ></span>
+            </div>
+            <span class="tiny muted" style="margin-left: auto">2 hours ago</span>
+          </div>
+          <p>
+            Such a lovely experience! The team made us feel welcome from the moment we walked in. Will
+            definitely be back.
+          </p>
+        </div>
+        <div class="story-reply">
+          <strong
+            ><i data-lucide="sparkles" class="icon" aria-hidden="true"></i> Thoughtful reply, on
+            autopilot</strong
+          >
+          <p>
+            Thank you, Sophie! We're so happy you felt at home with us. We can't wait to welcome you back.
+          </p>
+        </div>
+      </div>
+      <p class="story-footer">
+        <i data-lucide="shield-check" class="icon" aria-hidden="true"></i> Your data. Your Google Sheet.
+        Always yours. <span class="tiny">· Illustrative review</span>
+      </p>
+    </section>
+    <main id="main" class="login-form-side">
+      <button class="icon-btn login-theme" data-action="theme" aria-label="Switch color theme">
+        <i data-lucide="moon" class="icon" aria-hidden="true"></i>
+      </button>
+      <form id="login-form" class="login-form" method="post">
+        <a class="logo" href="index.html" aria-label="ReplyRaven home"
+          ><img src="assets/raven.svg" alt="" width="40" height="40" /><span>Reply<span>Raven</span></span></a
+        >
+        <div class="eyebrow">Your next great impression starts here</div>
+        <h1>Welcome back.</h1>
+        <p class="login-subtitle">
+          A calmer way to care for your customers.<br />Sign in to your ReplyRaven workspace.
+        </p>
+        <div class="field">
+          <label for="login-password">Workspace password</label>
+          <div class="secret-field">
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              required
+              autocomplete="current-password"
+              placeholder="Enter your password"
+            /><button type="button" class="icon-btn" data-reveal="login-password" aria-label="Show password">
+              <i data-lucide="eye" class="icon" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <p id="login-error" class="login-error" role="alert" hidden></p>
+        <div class="forgot-row">
+          <button type="button" id="forgot-password">Forgot your password?</button>
+        </div>
+        <div id="password-hint" class="password-hint" hidden>
+          The default password is <code>ReplyRaven123</code>. Changed it? This password lives only in this
+          browser. Reset it in your browser’s local storage, not your Google account.
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-full">
+          Sign in to your workspace <i data-lucide="arrow-right" class="icon icon-sm" aria-hidden="true"></i>
+        </button>
+        <div class="login-demo-divider">or take a look around</div>
+        <button type="button" class="btn btn-lg w-full" data-action="demo">
+          <i data-lucide="play" class="icon icon-sm" aria-hidden="true"></i> Explore the demo workspace
+        </button>
+        <p class="login-footnote">
+          A private workspace on your own device. The local password is a convenience gate, not a replacement
+          for Google OAuth.
+        </p>
+      </form>
+      <a class="login-back" href="index.html"
+        ><i data-lucide="arrow-left" class="icon" aria-hidden="true"></i> Back to ReplyRaven</a
+      >
+    </main>
+    <div id="modal-root"></div>
+    <div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
+    <noscript
+      ><div class="notice warning">
+        ReplyRaven needs JavaScript to connect Google and manage reviews. Please enable it in your browser.
+      </div></noscript
+    >
+  </body>
+</html>
