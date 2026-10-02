@@ -1,0 +1,103 @@
+name: Publish ReplyRaven
+on:
+  push:
+    branches: [main, arena/01a0f95f-replyraven]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: replyraven-publish
+  cancel-in-progress: false
+jobs:
+  configuration:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          if [ -n "$CLOUDFLARE_ACCOUNT_ID" ] && [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$ADMIN_PASSWORD" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Publication is paused. Configure private Cloudflare deployment credentials and ADMIN_PASSWORD in repository secrets. No deployment is claimed."
+          fi
+  backend:
+    needs: configuration
+    if: needs.configuration.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      worker_url: ${{ steps.deploy.outputs.worker_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - id: deploy
+        run: npm run deploy:backend
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          CLOUDFLARE_WORKER_URL: ${{ vars.CLOUDFLARE_WORKER_URL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          VAULT_SECRET: ${{ secrets.VAULT_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_CONNECTED_AT: ${{ secrets.GOOGLE_CONNECTED_AT }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+          CLOUDFLARE_EMAIL: ${{ vars.CLOUDFLARE_EMAIL }}
+          PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+          CORS_ORIGINS: ${{ vars.CORS_ORIGINS }}
+  website:
+    needs: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          CLOUDFLARE_WORKER_URL: ${{ needs.backend.outputs.worker_url }}
+          PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+      - if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
+      - name: Publish on the session branch
+        if: github.ref == 'refs/heads/arena/01a0f95f-replyraven'
+        run: |
+          node -e "const fs=require('node:fs');fs.rmSync('docs',{recursive:true,force:true});fs.cpSync('dist','docs',{recursive:true})"
+          git config user.name "ReplyRaven Publisher"
+          git config user.email "publisher@users.noreply.github.com"
+          git add docs
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish ReplyRaven website [skip ci]"
+            git push origin HEAD:arena/01a0f95f-replyraven
+          fi
+          GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" gh api --method POST repos/Joshbond123/ReplyRaven/pages/builds >/dev/null 2>&1 || echo "Pages needs source configuration before a build can be requested."
+          echo "Select arena/01a0f95f-replyraven and /docs in repository Pages settings. Publication artifacts are built; live availability must still be verified."

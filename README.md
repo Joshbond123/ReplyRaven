@@ -1,430 +1,250 @@
-<p align="center"><img src="assets/raven.svg" width="56" alt="ReplyRaven"></p>
-<h1 align="center">ReplyRaven</h1>
-<p align="center"><strong>A little care. A lasting impression.</strong><br>A premium, self-hosted workspace for Google Business Profile reviews.<br>GitHub Pages + Google Sheets + GitHub Actions. No application database.</p>
+# ReplyRaven
 
-## What’s included
+**AI that auto-replies to Google reviews in your brand voice.**
 
-- A responsive landing site, password gate, overview, unified review inbox, per-business reviews, OAuth callback, and settings.
-- Light/dark themes, Inter, Tailwind CDN, Framer Motion CDN enhancements, Lucide CDN with a local fallback, animated cards, charts, skeletons, focus-trapped dialogs, and toasts. Inter and icons also work without the CDNs.
-- **Scan businesses where I’m manager**: paginate accessible Google accounts and locations, compare against Sheets, select new locations, and add them. Owners and managers are both supported; it never discovers businesses your Google account cannot access.
-- Manual sync, write/edit/delete owner replies, AI drafts, a WhatsApp share-link generator, filters, search, and CSV export.
-- Opt-in 4–5 star auto-replies, customizable global/per-business prompts, round-robin AI keys, and failover across OpenAI/GPT, Gemini, Anthropic, and Groq.
-- Scheduled sync every 15 minutes and replies every 30 minutes, with a shared writer lock, rate pacing, logs, and GitHub job summaries.
-- A clearly labeled **interactive demo**. Demo changes are stored only on this device and never call Google or an AI provider. Real workspace data lives in Sheets; localStorage holds connection settings and UI preferences.
-- Unit/API/automation tests and desktop/mobile browser tests, including mocked private-Sheets integration.
+ReplyRaven’s static frontend is built for GitHub Pages. Its API, background jobs, credential vault, and five-minute scheduler run on Cloudflare Workers. Production application data lives in Cloudflare D1; Cloudflare Queues transports durable work. There is no browser-local business database.
 
-> **Important:** GitHub Pages is a static host. The local password is a convenience gate, **not server-side authentication**. This is a personal, single-user review workspace, not a secure multi-tenant SaaS. Keep the Sheet private, protect your Google OAuth credentials, and use a trusted device. Google API approval, OAuth, your Sheet, provider keys, and Actions secrets must be configured before live operations can work. The site and demo work immediately, without them.
+## Product
 
-## Quick start / preview
-
-Use Node **20.12+** (or a newer LTS) for the local `.env` commands.
-
-```bash
-npm ci
-npm run dev
-```
-
-Open `http://localhost:3000`. The server binds to `0.0.0.0`, accepts preview hosts, and requires no build. All browser app URLs are relative, so project subpaths such as `/ReplyRaven/` work on Pages.
-
-- Click **Explore the demo** to try every workflow without credentials.
-- Or sign in with the case-sensitive initial password **`ReplyRaven123`**.
-- Change it in **Settings → Account**. The password and seven-day local session apply only to that browser/origin. They do not sign you into Google.
-- A valid local session redirects both the landing and login pages to the dashboard. An expired session on an app page redirects to login. Logout clears the gate and returns to the landing page.
+- Server-verified owner authentication and seven-day signed sessions.
+- Paginated discovery of accessible Google Business Profile accounts and locations.
+- Business-specific brand learning from the authorized profile, public website, and up to twenty recent reviews.
+- Editable learned voice, encrypted AI keys, automatic model discovery, round-robin rotation, and key health.
+- New, unreplied **4–5 star** reviews only for automation. Previous reviews are opt-in.
+- Optional seven-day trials and monthly, yearly, or custom subscriptions per business.
+- Automatic billing pauses, recorded payments, and calculated renewal dates.
+- Email, browser push, and durable in-app notifications with event-level preferences.
+- Queue retries, deduplication, write leases, delivery records, and a retained failure backlog.
+- Responsive desktop/mobile layouts, light/dark modes, local Inter/Lucide assets, and motion enhancements.
 
 ## Architecture
 
 ```text
-Browser on GitHub Pages
-  ├─ Google Identity Services → short-lived OAuth access token
-  ├─ Google Business APIs → accounts, locations, reviews, owner replies
-  ├─ Google Sheets API → the five private data tabs
-  └─ AI provider API (or optional Apps Script AI relay) → reply drafts
+GitHub Pages frontend → HTTPS Worker API → D1
+                                  ↓
+                         durable job outbox
+                                  ↓
+                        Cloudflare Queues
+                                  ↓
+                    brand learning / sync / replies
+                                  ↓
+                 Google, selected AI provider, notifications
 
-GitHub Actions
-  ├─ GitHub Secrets → OAuth client + offline refresh token + AI keys
-  ├─ refresh access token → Google Business APIs
-  ├─ google-spreadsheet / Sheets REST → same five private tabs
-  └─ official OpenAI / Gemini SDKs (+ Anthropic REST) → safe reply queue
+Worker Cron Trigger → due-work scheduler, every five minutes
 ```
 
-No Firebase, SQL, hosted application server, or paid ReplyRaven subscription. AI provider usage, API quotas, and any applicable GitHub Actions charges are your responsibility.
+The frontend never contains Google secrets, AI keys, Cloudflare deployment credentials, or a default public owner password. `CLOUDFLARE_WORKER_URL` is a **public** build-time endpoint, injected into `runtime-config.js`.
 
-## 1. Create and approve your Google Cloud project
+## Before deployment
 
-1. Create a project at [Google Cloud Console](https://console.cloud.google.com/).
-2. Read [Business Profile API prerequisites](https://developers.google.com/my-business/content/prereqs) and [request API access](https://developers.google.com/my-business/content/basic-setup). **Google must approve Business Profile API access.** Merely enabling the services does not grant a usable quota. Check your approved quota if accounts/locations return 403/429.
-3. Enable these services in **APIs & Services → Library**:
+You need:
 
-   | Console API                                          | Service                                        |
-   | ---------------------------------------------------- | ---------------------------------------------- |
-   | My Business Account Management API                   | `mybusinessaccountmanagement.googleapis.com`   |
-   | My Business Business Information API                 | `mybusinessbusinessinformation.googleapis.com` |
-   | Google My Business API / Business Profile v4 reviews | `mybusiness.googleapis.com`                    |
-   | Google Sheets API                                    | `sheets.googleapis.com`                        |
+1. A Cloudflare account and an API token authorized to manage Workers, D1, and Queues. Deployment does not upgrade your paid plan automatically.
+2. A Google Cloud project approved for Business Profile API access, with the Account Management and Business Information APIs enabled and review access available.
+3. An OAuth web client and `business.manage` offline authorization for the Google account managing your locations.
+4. A strong owner password, at least twelve characters.
+5. A verified email sender with Resend, or a Cloudflare Email binding and verified destination.
+6. Repository access to publish the website and enable Pages.
 
-4. Use a Gmail/Google account that is actually an **owner or manager** of the Business Profiles you want to manage. Reviews are available for verified locations. API availability and Google quotas, not ReplyRaven, determine how many calls can run.
-5. Configure the OAuth consent screen / Google Auth Platform. Add your own Google account as a test user if the app is in Testing.
-6. Configure these scopes:
+Keep private values in the hosting secret stores or a private, untracked environment file. Never commit a credential document, populated environment file, or private key.
 
-   ```text
-   https://www.googleapis.com/auth/business.manage
-   https://www.googleapis.com/auth/spreadsheets
-   ```
+## Private deployment configuration
 
-**Refresh token lifespan:** external apps in OAuth **Testing** can receive refresh tokens that expire after seven days for these scopes. Publishing the consent configuration to Production, and completing any Google verification required for your use case, is necessary for stable unattended use. Tokens can also be revoked by the account owner. Reauthorize if Actions reports `invalid_grant`.
+Copy `.env.template` to an untracked `.env` and populate it locally. Node 22.13 or newer is required.
 
-## 2. Host the frontend on GitHub Pages
+| Name                        | Purpose                                               |
+| --------------------------- | ----------------------------------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID`     | Deployment account                                    |
+| `CLOUDFLARE_API_TOKEN`      | Deployment only; never a Worker runtime secret        |
+| `CLOUDFLARE_D1_DATABASE_ID` | Existing database; omit for first-time provisioning   |
+| `ADMIN_PASSWORD`            | Hashed before being stored in the Worker secret store |
+| `SESSION_SECRET`            | Stable session-signing secret, at least 32 characters |
+| `VAULT_SECRET`              | Stable encryption secret, at least 32 characters      |
+| `GOOGLE_CLIENT_ID`          | Runtime Google client ID                              |
+| `GOOGLE_CLIENT_SECRET`      | Runtime Google client secret                          |
+| `GOOGLE_REFRESH_TOKEN`      | Runtime offline refresh token                         |
+| `GOOGLE_CONNECTED_AT`       | Token issue/connection timestamp, preferably ISO UTC  |
+| `RESEND_API_KEY`            | Runtime email provider credential                     |
+| `EMAIL_FROM`                | Verified notification sender                          |
+| `ADMIN_EMAIL`               | Initial notification destination and push contact     |
+| `PUBLIC_SITE_URL`           | Actual public website URL                             |
+| `CORS_ORIGINS`              | Comma-separated allowed frontend origins              |
+| `CLOUDFLARE_WORKER_URL`     | Deployed API endpoint used by the frontend build      |
 
-The repository already contains every static file. No bundling or application server is needed.
+Optional `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, and `GROQ_API_KEY` are stored as Worker secrets. AI settings can fetch their available models without returning the keys to the browser. Keys pasted through the application are encrypted in D1 instead.
 
-### Option A — branch deployment (simple, main / root)
+On an initial deployment, the deployment helper generates missing session/vault secrets and VAPID signing keys. On subsequent deployments, omitted values are left unchanged. **Do not rotate `VAULT_SECRET` without migrating the encrypted records.** The vault encryption context binds each ciphertext to its record.
 
-1. Merge the completed files into your repository’s default branch.
-2. In **Repository Settings → Pages**, select **Deploy from a branch**.
-3. Choose **main** and **`/ (root)`**, then Save.
-4. Wait for GitHub’s Pages build. For this repository the URL is:
+A private credentials file can also be imported with `--credentials-file /private/path`. Recognized labels are parsed as data, never executed. A supplied GitHub token is used only for explicit repository deployment operations; it is excluded from the Worker’s runtime-secret whitelist.
 
-   ```text
-   https://Joshbond123.github.io/ReplyRaven/
-   ```
-
-5. Open that URL and click Get started. `.nojekyll` prevents Jekyll processing.
-
-The optional `pages.yml` deployment job is skipped by default, so it does not compete with branch-based Pages deployment.
-
-### Option B — GitHub Actions deployment (only frontend files published)
-
-1. In **Settings → Pages**, select **GitHub Actions** as Source.
-2. Set the repository **Actions variable** `PAGES_DEPLOY_MODE` to `actions`.
-3. Run **Deploy GitHub Pages** manually once. Future pushes to `main` deploy automatically.
-
-This workflow publishes only the HTML, CSS, frontend JavaScript, shared browser modules, demo data, and assets—not Node scripts, tests, workflows, or `.env` files. Use your own default branch name in this optional workflow if it is not `main`.
-
-For a fork/custom domain, substitute your own URL in the Google setup. The settings page calculates the exact callback URL for the current origin/subpath. Repository help/Actions links target `Joshbond123/ReplyRaven`; update those links if using a fork.
-
-## 3. Create a web OAuth client
-
-1. In **APIs & Services → Credentials**, create an OAuth client of type **Web application**.
-2. Add the **origin only** under Authorized JavaScript origins:
-
-   ```text
-   https://Joshbond123.github.io
-   ```
-
-3. Add the **full, case-sensitive** callback under Authorized redirect URIs:
-
-   ```text
-   https://Joshbond123.github.io/ReplyRaven/callback.html
-   ```
-
-   In general: `https://USERNAME.github.io/REPO/callback.html`. The Google settings tab displays your actual URI and a Copy button. Register your custom domain instead if you use one.
-
-4. For local development, additionally register `http://localhost:3000` as an origin and `http://localhost:3000/callback.html` as a redirect URI. The address registered in Google must match the address in your browser.
-5. For an Arena/live preview, register the actual `https://…e2b.app` preview origin and callback shown in Settings. Do not use localhost in browser-facing production code.
-6. Keep the client ID handy. Store the **client secret offline** for the token helper and in GitHub Secrets. The **Connect Google** button does not require a client secret.
-
-## 4. Create your private Google Sheet
-
-Create a spreadsheet in the same manager account, or share it with that account as an **Editor**. Keep general access **Restricted**. Never publish the entire spreadsheet or the `AI_Keys` tab.
-
-You can create a blank Sheet and use **Settings → Google connection → Prepare sheet** after connecting Google. This creates missing tabs and headers without overwriting existing non-matching data. Preparing an existing sheet preserves your reply prompt and automation settings.
-
-For manual creation, make these **five exact tab names**, with these **exact row 1 headers**, in this order. Paste each comma-separated line into A1, then use **Data → Split text to columns → Comma** if Sheets puts it in one cell.
-
-### Businesses
-
-```csv
-google_account_id,google_location_id,business_name,address,is_auto_reply,ai_prompt_template,total_reviews,avg_rating,last_sync,status,unreplied_count
-```
-
-### Reviews
-
-```csv
-google_review_id,google_location_id,business_name,reviewer_name,star_rating,comment,review_date,reply_comment,is_replied,reply_date,is_auto_replied,needs_attention
-```
-
-### AI_Keys
-
-```csv
-provider,api_key,is_active,request_count,last_used_at,model_name,id
-```
-
-### Settings
-
-```csv
-key,value
-```
-
-### Logs
-
-```csv
-timestamp,business_name,action,review_id,status,details,stars
-```
-
-Find the Sheet ID in `https://docs.google.com/spreadsheets/d/SHEET_ID/edit`. You may paste the full Sheet URL into the Google connection form; it extracts the ID.
-
-Data conventions:
-
-- Google account/location/review IDs are stored as **strings**, not spreadsheet numbers. This avoids rounding long Google IDs.
-- Boolean values are `TRUE` or `FALSE`; active businesses have `status=ACTIVE`.
-- Dates are ISO timestamps. Dashboard daily counters/charts use **UTC**, like the workflows.
-- Auto-reply starts **off** for newly scanned businesses.
-- `needs_attention=TRUE` means an unreplied 1–3 star review.
-- The scripts update edited reviews and remote reply status, not just newly added rows. After successfully fetching all review pages, deleted remote reviews and duplicate cached review rows are removed.
-- All writes use `valueInputOption=RAW`, deliberately rather than `USER_ENTERED`: reviews cannot inject Sheets formulas, and long IDs are preserved. CSV export also neutralizes formula-looking cells.
-- Do not sort, insert, delete, or edit sheet rows while a sync/reply run is writing. Rows are re-resolved before important updates, but Sheets is not a transactional database.
-
-## 5. Connect the live browser workspace
-
-1. Sign in with **`ReplyRaven123`**. If you are in the demo, click **Set up my workspace** first. Demo fixtures are isolated from live configuration.
-2. Open **Settings → Google connection**.
-3. Enter the web OAuth **client ID** and **Sheet ID**.
-4. Click **Connect Google**, choose your manager account, and grant both scopes.
-5. Click **Save connection** and **Prepare sheet** (for a new sheet).
-6. Click **Test connection**. This tests the Account Management API; it does not pretend that a successful accounts call also validates every location or the Sheet.
-7. Go to Overview, click **Scan businesses**, select the new locations, and **Add selected businesses**.
-8. Click a business’s sync icon (or View reviews → Sync reviews) to bring in reviews. The background Sync workflow will also do this once configured.
-
-**Browser token expiry:** Google access tokens are short-lived (usually about an hour), independently of the seven-day local workspace session. Reconnect Google when needed. The static app does **not** use an exposed client secret/refresh token to silently refresh browser tokens. Actions uses its private offline credentials separately.
-
-### API key (optional)
-
-If you need it, create an API key in Google Cloud Credentials, restrict it to the Sheets API and your own allowed website referrers, and paste it into Settings.
-
-An API key can only read publicly accessible spreadsheet data; **it cannot authorize private reads or any writes**. OAuth is the recommended/default path. **Do not make your live ReplyRaven Sheet public just to use an API key**, because that would expose customer data and any AI keys in it. The client prefers Bearer OAuth over the API-key fallback.
-
-Non-sensitive connection metadata, prompts, and automation rules are saved to the `Settings` tab. Client secrets, refresh/access tokens, API keys, bridge tokens, and the dashboard password are **not** written to that tab. If you explicitly enter browser secrets, they are saved on this device; browser storage is not a vault.
-
-## 6. Add AI keys and choose your voice
-
-Open **Settings → AI keys**. Select a provider, enter a key, choose an available model, and Add.
-
-| Provider          | Default model              | Implementation                       |
-| ----------------- | -------------------------- | ------------------------------------ |
-| `openai` or `gpt` | `gpt-4o-mini`              | OpenAI API / official SDK in Actions |
-| `gemini`          | `gemini-2.5-flash`         | Gemini API / official SDK in Actions |
-| `anthropic`       | `claude-sonnet-4-20250514` | Messages API                         |
-| `groq`            | `llama-3.3-70b-versatile`  | OpenAI-compatible Groq endpoint      |
-
-Model availability depends on your provider account and can change. Enter a supported replacement model if a default is unavailable.
-
-- Only active keys participate.
-- Round-robin advances for **each attempted request**, with bounded failover on rate limits, provider errors, invalid keys, or connection failures. It never invents a reply when all keys fail.
-- Request counts and last-used timestamps update in Sheets.
-- Browser rotation uses `localStorage.ai_index`; Actions rotation persists `ai_rotation_index` in Settings.
-- Keys in GitHub Secrets are authoritative for Actions. A matching key marked inactive in Sheets cannot be re-enabled by a stale secret. Deleting a key from Sheets does not revoke it or remove it from GitHub Secrets—update both.
-- Browser AI requests expose credentials to the trusted browser/device; Anthropic’s explicit direct-browser header is used. Browser CORS policies can block individual providers. Use the optional relay below if needed.
-
-Set your default voice in **Settings → Account**. Use variables `{stars}`, `{comment}`, and `{business_name}`. Each business card’s options menu also has **Customize AI voice** for a per-business override. Customer text is treated as untrusted content, not as instructions.
-
-A generated draft is **not** posted automatically from the reply dialog. You can edit it before clicking **Post to Google**. **Bulk reply 4–5 stars** is an explicit, confirmed generate-and-post operation; lower-star reviews are excluded.
-
-## 7. Obtain the offline refresh token locally
-
-Do this on your own trusted machine—not in chat, a public runner, or a shared device.
+## Deploy the Cloudflare backend
 
 ```bash
 npm ci
-cp .env.example .env
+node --env-file=.env scripts/deploy-cloudflare.js
 ```
 
-In the untracked `.env`, set:
+The helper:
 
-```dotenv
-GOOGLE_CLIENT_ID=YOUR_WEB_CLIENT_ID
-GOOGLE_CLIENT_SECRET=YOUR_CLIENT_SECRET
-GOOGLE_REDIRECT_URI=https://Joshbond123.github.io/ReplyRaven/callback.html
-```
+1. Checks account credentials and the owner password requirement.
+2. Creates or locates D1, the work queue, and its dead-letter queue.
+3. Applies `backend/migrations/0001.sql` with Wrangler.
+4. Deploys the API and Cron Trigger.
+5. Uploads runtime secrets privately.
+6. Confirms database, queue, and authentication readiness at `/health`.
 
-Generate authorization in either of these ways:
+It writes public release metadata to the ignored `.cache/cloudflare-release.json`. No credential is included in a frontend artifact. Deployments stop rather than claim success if readiness fails.
 
-- **Browser:** Settings → Google connection → **Build offline OAuth URL** → Authorize offline access. This stores a random state in the same browser tab and verifies the callback.
-- **Local helper:**
+To store the Cloudflare account ID, API token, and D1 ID in repository secrets during deployment, use `--save-repository-secrets`. The GitHub connection must have repository secret-management permission. An inaccessible secret store is reported as a partial deployment, not silently ignored.
 
-  ```bash
-  node --env-file=.env scripts/get-token.js --url
-  ```
+For Cloudflare Email instead of Resend, configure email routing and a verified destination first, set `CLOUDFLARE_EMAIL=true`, and use a plain verified sender in `EMAIL_FROM`. A sender label is supported by Resend. Delivery cannot be guaranteed by an unconfigured or unavailable provider.
 
-  Open the URL yourself. A URL generated locally cannot be matched to the browser tab’s session state, so the callback warns about its unverified source. This is expected for the local helper; exchange only a code from the flow **you** initiated.
-
-On `callback.html`, copy the one-time code. Then run:
+## Build and publish the website
 
 ```bash
-node --env-file=.env scripts/get-token.js
+CLOUDFLARE_WORKER_URL=https://YOUR_DEPLOYED_WORKER_HOST npm run build
 ```
 
-Paste the code at the interactive prompt. Alternatively (beware shell history):
+The deployable static output is **`dist/`**. Only frontend files and public assets are collected. The build scans for retired content and does not copy backend code or environment files.
+
+The deployment-only workflow `.github/workflows/deploy.yml` deploys the Worker and then uses `peaceiris/actions-gh-pages` to publish `dist/` to **`gh-pages`**. It runs on default-branch updates, session-branch updates, or manual dispatch, only when private deployment settings are present. Session-branch publication stays on the same branch. It is not an application scheduler.
+
+Configure repository secrets with the private deployment names above, including the owner password. Configure `PUBLIC_SITE_URL`, `EMAIL_FROM`, and optionally `CLOUDFLARE_WORKER_URL` as repository variables. Then:
+
+1. Merge the application into the default branch.
+2. Run **Publish ReplyRaven**.
+3. In **Settings → Pages**, select **Deploy from a branch → gh-pages → /(root)**.
+4. Wait for the Pages publication to succeed.
+5. Open the public URL and run the live verification command below.
+
+### Session-branch publication
+
+This development session is fixed to `arena/01a0f95f-replyraven`. To publish without writing another branch:
 
 ```bash
-node --env-file=.env scripts/get-token.js 'YOUR_ONE_TIME_CODE'
+node --env-file=.env scripts/publish-branch.js
 ```
 
-The helper posts to `https://oauth2.googleapis.com/token` and prints the access token, refresh token, and scopes. Copy the **refresh token** into GitHub Secrets. You can use the access token temporarily in the browser, but the Connect Google button is easier for future sessions.
+This first requires a healthy, deployed Worker, builds `dist/`, and mirrors the static output into `docs/`. Commit and push **the session branch only**, then select **arena/01a0f95f-replyraven → /docs** in Pages settings. When the release workflow runs from the session branch, its static artifacts are committed to that branch’s `docs/` folder without creating another branch. The default-branch `gh-pages` publisher is supplied for later use and must not be run to bypass the session branch restriction.
 
-Codes expire quickly and can be used only once. The redirect URI must **exactly match** the URI used when authorizing. If no refresh token is returned, reauthorize with `access_type=offline` and `prompt=consent`; if necessary revoke the previous application grant in your Google account before authorizing again.
+The hosting connection needs Pages administration permission to enable a site automatically. If it returns 403, a repository owner must configure the source directly. Code being pushed does not mean a website is live.
 
-### Advanced browser exchange
+### Custom domain
 
-If you deliberately saved the client secret on this device, a state-verified callback offers a browser exchange button. It does not exchange automatically. Unverified callbacks disable it. CORS or Google policies can block browser exchange; the local helper is the reliable recommended path. Never expose your client secret as a committed frontend configuration.
+Set `PUBLIC_SITE_URL` to your HTTPS domain before building. The builder creates the public `CNAME` file. Configure the domain’s DNS records for GitHub Pages and enable HTTPS there. Include that exact origin in the Worker’s `CORS_ORIGINS`. API traffic continues to the Worker URL; no private secret is put in DNS or browser JavaScript.
 
-## 8. Configure GitHub Actions
+## Connect Google
 
-In **Repository Settings → Secrets and variables → Actions → New repository secret**, create:
+The Google page contains only **Client ID**, **Client Secret**, and **Refresh Token**.
 
-| Secret                 | Value                                        |
-| ---------------------- | -------------------------------------------- |
-| `GOOGLE_SHEET_ID`      | The private spreadsheet ID                   |
-| `GOOGLE_CLIENT_ID`     | Web OAuth client ID                          |
-| `GOOGLE_CLIENT_SECRET` | Its client secret (from your offline `.env`) |
-| `GOOGLE_REFRESH_TOKEN` | Token from the local helper                  |
-| `AI_KEYS_JSON`         | JSON array of active provider keys           |
+1. Select **Reconnect now** to open official OAuth Playground.
+2. Open its gear menu and enable **Use your own OAuth credentials**.
+3. Enter your Google client ID and secret in Playground. Register `https://developers.google.com/oauthplayground` as an authorized redirect URI on your web client.
+4. Authorize `https://www.googleapis.com/auth/business.manage` and exchange the authorization code.
+5. Save the new refresh token in ReplyRaven. The backend validates it before saving encrypted credentials.
 
-**Settings → GitHub secrets** provides copy buttons and an explicit reveal/copy export for active keys. You do not need to paste your offline secret or refresh token into the browser; copy them directly into GitHub.
+A single click securely opens Playground; cross-origin browser rules prevent ReplyRaven from privately filling its secret fields. Client secrets and refresh tokens are never placed in reconnect URLs, localStorage, or sessionStorage.
 
-Example JSON shape (replace placeholders privately):
+For restricted OAuth consent applications, the renewal schedule uses a seven-day lifetime from the recorded issue/save timestamp. A day-six event warns: **“Your Google connection expires in 24 hours - Reconnect now.”** Published applications may have different token lifetimes. Revocation or `invalid_grant` is detected independently and pauses Google work. Google can invalidate a token earlier, so a calendar estimate is not proof of validity.
 
-```json
-[
-  {
-    "id": "a-stable-id-matching-the-AI_Keys-row",
-    "provider": "openai",
-    "api_key": "YOUR_PRIVATE_PROVIDER_KEY",
-    "model_name": "gpt-4o-mini",
-    "is_active": "TRUE"
-  },
-  {
-    "id": "another-stable-id",
-    "provider": "gemini",
-    "api_key": "YOUR_PRIVATE_PROVIDER_KEY",
-    "model_name": "gemini-2.5-flash",
-    "is_active": "TRUE"
-  }
-]
-```
+## Business onboarding and brand voice
 
-- `key` / `model` aliases are accepted by the local scripts, but the UI exports canonical names.
-- Keep IDs unique and stable for accounting. IDs omitted from manually written JSON become `secret-1`, `secret-2`, etc.
-- Secret-only keys get metadata-only `AI_Keys` rows; the runner does not copy the secret’s plaintext key into Sheets.
-- Secret-only metadata rows cannot produce a usable secret export without their keys; keep your original JSON offline, or use the relay for browser AI.
+Select **Add business**, choose accessible locations, and configure each business separately.
 
-Then:
+- Learning reads authorized Google profile data, website content when publicly available, and up to twenty recent reviews.
+- Unsupported or unavailable websites are recorded as unavailable; content is not fabricated.
+- The profile includes a summary, tone, language, audience, known facts, phrases to avoid, sign-off, and reply style.
+- **View what AI learned** opens the profile and its source status. You can edit it or request relearning.
+- Auto-reply is opt-in. New businesses do not automatically reply to historical reviews.
+- To handle historical reviews, explicitly select a number or use **Reply to previous reviews**. The per-request safety limit is 1,000; repeated requests can handle larger queues.
 
-1. Enable Actions in the repository (forks can have schedules disabled initially).
-2. On the **default branch**, run **Actions → Sync → Run workflow**.
-3. Verify review rows and business metrics in your Sheet and the workflow summary.
-4. Add an active AI key/secret and toggle auto-reply **on for one test business**.
-5. Confirm the master switch in **Settings → Automation** is on. Run **Auto-Reply** manually.
-6. Verify a real 4–5 star reply on Google and the `AUTO_REPLY` log. Then enable other businesses as appropriate.
+Google review APIs require verified locations and appropriate manager permissions. Discovery can show accessible locations whose review endpoint is not yet available; failures are shown in the operation log.
 
-The cron schedules are:
+## Automation and reply safety
 
-```yaml
-# sync.yml
-cron: '*/15 * * * *'
-# reply.yml
-cron: '*/30 * * * *'
-```
+The Cloudflare trigger ticks every five minutes. The owner-selected interval—15, 30, 60, 120, or 360 minutes—controls when each business is due for review synchronization. Small page-sized jobs keep work bounded; large account sets progress through queues instead of an application business cap.
 
-Actions receives `SHEET_ID`, `CLIENT_ID`, `CLIENT_SECRET`, and `REFRESH_TOKEN` mapped from those secrets. The scripts also accept the `GOOGLE_…` names for local use.
+Reply targets receive a random **5–30 minute** delay from detection. Queue/provider load can postpone execution; the delay is a target, not a delivery SLA.
 
-**Operational guardrails**
+Every automatic post requires:
 
-- Both workflows use concurrency group `replyraven-sheet-writer`, with no cancellation of a running job. They serialize scheduled sheet writes. A queued run can still be delayed/replaced by GitHub; cron is best-effort, not a real-time scheduler.
-- Sync prioritizes never-synced and least-recently-synced businesses, so a large partial run does not starve later locations. Google Sheets has a finite cell/storage limit and Actions has a finite job duration; “unlimited businesses” means no ReplyRaven per-location cap, not unbounded infrastructure.
-- Schedules run only from the repository default branch. GitHub can disable public-repository schedules after prolonged inactivity; check Actions periodically.
-- The queue processes oldest reviews first. By default, each run posts at most **100** replies, configurable from **1–1,000** in Automation. No application limit is placed on the number of businesses.
-- At least **2 seconds** between replies (configurable up to 30). Additional Sheets read/write pacing keeps each quota stream below 60 calls/minute, so large runs take longer. Provider and Google limits still apply.
-- Opt-in active businesses only; 1–3 star reviews never auto-reply, even if the rating changed after sync.
-- Before generation and again immediately before PUT, Google is checked for an existing reply. Existing replies are reconciled into Sheets and skipped. The API does not offer a conditional/transactional reply PUT; a tiny race with another manager’s simultaneous post cannot be eliminated on this architecture. Avoid manual/automated writes at the same time.
-- If a Google PUT succeeds but a sheet update fails, a later run checks the remote reply and reconciles it instead of posting again. Workflows log per-review errors and fail visibly, rather than claiming success.
-- Changing automation cadence requires editing the workflow YAML; saving the UI guardrails does not rewrite workflow files.
-- Master automation can be paused without affecting review sync. All newly discovered businesses start opted out.
+- Master automation enabled and business opt-in.
+- A ready, editable brand voice.
+- Valid trial/subscription state if billing is enabled.
+- An unreplied 4–5 star review, re-read from Google before generation.
+- Another Google read before PUT, fresh billing/automation checks, and an internal write lease.
 
-## Optional: Apps Script AI-only relay
+Owner replies already present are reconciled and skipped. Low-star edits and customer edits during generation prevent the stale draft from being sent. Google PUTs are never blindly replayed. Ambiguous results are marked **uncertain**, and synchronization/explicit inspection must reconcile them before another operation.
 
-This solves browser CORS restrictions and can keep provider credentials out of the browser’s key table. It does not provide multi-tenant authentication, and its bridge token must be treated like an API key.
+Google does not expose a conditional reply PUT. The final remote checks and internal serialization prevent intentional overwrites and concurrent ReplyRaven writers, but no client can atomically exclude another manager posting in the milliseconds between Google’s GET and PUT. Avoid simultaneous external-manager writes when automation is active.
 
-1. Create a Google Apps Script project, and paste `scripts/apps-script.gs` into its editor.
-2. Set **Project Settings → Script Properties**:
-   - `BRIDGE_TOKEN`: a random secret of at least 32 characters. Generate locally, e.g. `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
-   - `GOOGLE_SHEET_ID`: your private sheet ID.
-   - Optional `AI_KEYS_JSON`: private provider keys with IDs matching the `AI_Keys` metadata rows. If omitted, the bridge reads actual keys from the private `AI_Keys` tab.
-3. Deploy as a **Web app**, **Execute as: Me**, **Who has access: Anyone**. Approve the script’s own Spreadsheet/UrlFetch permissions. Requests without the bridge token are rejected; only the AI generation action is supported.
-4. Paste the deployed `https://script.google.com/macros/s/…/exec` URL and bridge token into **Google connection → Advanced settings**, then Save connection.
-5. If you keep keys in Script Properties, leave `api_key` blank in the matching Sheet rows. Keep `id`, `provider`, `model_name`, and `is_active=TRUE`. Browser rotation can use these metadata-only rows with the relay.
+## Per-business billing
 
-The browser sends a simple POST containing the key ID and prompt—not the provider secret. The bridge only calls hard-coded supported provider hosts; it cannot proxy arbitrary URLs, write arbitrary sheets, or exchange Google tokens. Apps Script quotas and deployment/CORS policies still apply. To update the script, redeploy its web app version.
+Billing is optional. Enable a trial and/or subscription only for businesses that need the guardrails.
 
-## Daily use
+- Trial: seven days from onboarding when enabled.
+- Subscription: monthly, yearly, or custom day interval with amount, currency, method, and next due date.
+- Trial/subscription expiry blocks automatic replies immediately at the posting guard, even before the scheduler has updated the visible payment status.
+- Trial reminders: two days, one day, and expiry.
+- Monthly/yearly reminders: three days, one day, and due day.
+- **Mark as Paid** records receipt, calculates the next period, and clears the billing pause. It does not force master automation or business opt-in on.
+- Expired/cancelled statuses cannot be reset to active with the ordinary settings form.
 
-- **Overview**: live Sheet-derived stats, recent review activity, search/filter/sort, sync icons, auto-reply toggles, CSV export, and recent logs.
-- **Scan**: only locations not already tracked are offered. Accessible account failures are shown without hiding results from successful accounts.
-- **View reviews**: per-business inbox. Sidebar Review inbox aggregates all tracked businesses.
-- **Generate AI reply**: opens an editable draft. Post, edit, and delete act on the **owner reply**, never the customer’s review.
-- **Bulk reply**: confirmed 4–5 star operation, irrespective of whether background auto-reply is enabled. Existing remote replies and ratings are rechecked.
-- **WhatsApp**: click the send icon to open a prefilled share link. Optional recipient in Account settings. It never sends a message silently or integrates a WhatsApp bot.
-- **Remove business**: removes tracking and cached reviews from Sheets, not the Google Business Profile or manager permissions. Historical Logs stay.
-- **Themes**: header toggle or Account preference. Saved on this device.
+Cash, transfer, Stripe, and PayPal are receipt labels. ReplyRaven does not silently charge a card, create a checkout session, or fabricate a successful payment.
 
-## Test and maintain
+## Notifications and reliability
+
+Notifications have a global switch, three channel choices, and six event switches. The in-app inbox is stored durably in D1. Email and push use queue consumers and channel-specific delivery records.
+
+The source of truth is the D1 outbox, not an ephemeral queue message. Deduplication avoids repeated reminders. Failed channels retain their error state, retry with backoff, and remain visible; exhausted external queue retries do not erase the durable job. Notification failures are periodically reopened for further delivery attempts. The inbox and delivery log distinguish **queued**, **delayed**, and **accepted by provider**.
+
+Enable browser permission on the published HTTPS site. Browser permission, push-service retention, network availability, verified senders, and provider outages all affect delivery. **Zero-failure delivery cannot be promised.** A durable record and visible retries are the guarantee this application can enforce; provider acceptance is not proof the recipient read the message.
+
+## Verification
 
 ```bash
-npm test              # unit, API-contract, key rotation, sync and reply safety
-npm run test:e2e      # offline-capable Chromium desktop/mobile flows + mocked Sheets
+npm run verify
+npm run verify:browser
+npm run verify:bundle
+npm run format:check
 npm audit
+CLOUDFLARE_WORKER_URL=/api npm run build
 ```
 
-The browser tests use an npm-distributed Chromium plus local Inter/Lucide assets. No live credentials are needed, and external calls are blocked/mocked. A Chrome executable can be supplied with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chrome`. The included fallback is intended for Linux; on macOS/Windows supply your installed Chrome path. CI runs both suites on Ubuntu/Node 20.
+The isolated verification suite runs the real API handlers, encryption, SQL migrations, job transitions, billing gates, and provider adapters with outbound responses controlled. It does not post to Google or send mail.
 
-Run automation locally only with your own untracked `.env`:
+Local development uses SQLite’s D1-compatible interface only in the development tool; the deployed Worker binds Cloudflare D1. No businesses are seeded into the development UI.
 
 ```bash
-node --env-file=.env scripts/sync-reviews.js
-node --env-file=.env scripts/auto-reply.js
+npm run dev:api
+npm run dev
 ```
 
-These are **live** operations, not simulations. The scripts will post real replies if automation is enabled, a business is opted in, and eligible reviews exist.
+The browser uses relative `/api` requests; the static development server proxies them to the local API. Private local owner access is generated in ignored `.cache/local/owner-access.json`. The backend and static server bind `0.0.0.0` for preview access.
 
-## Troubleshooting
+### Live release checks
 
-| Symptom                                | What to check                                                                                                                                                     |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Local login fails                      | Initial password is `ReplyRaven123`, case-sensitive. It is per-browser. Enable local storage. Forgot password shows the default hint.                             |
-| Changed password forgotten             | On your own device, remove only `dashboard_password`, `auth`, and `auth_expiry` from this site’s localStorage; reload login. No Google account reset is involved. |
-| OAuth `redirect_uri_mismatch`          | Exact origin, protocol, repository case, subpath, callback filename, and the URI used by `get-token.js`.                                                          |
-| Popup/origin error                     | Register the current origin on a Web OAuth client, allow popups, and use a supported browser.                                                                     |
-| Google 401                             | Browser token expired: reconnect. Actions: regenerate/revoke-and-reauthorize the offline token if needed.                                                         |
-| Google 403 / no Business API quota     | Project approval, enabled APIs, scopes, consent test user, correct manager account, and verified locations.                                                       |
-| Sheet read/write 403                   | The manager account needs access to the Sheet and spreadsheet scope. An API key is not write authorization.                                                       |
-| Header/schema error                    | Verify all five exact tab names and header order. Prepare sheet refuses to overwrite mismatched non-empty headers.                                                |
-| No businesses found                    | Account must manage locations; all already-tracked locations are excluded. Review any partial-scan account errors.                                                |
-| Provider fails / 429                   | Check key permissions, quota, supported model, active switch, and CORS. Try the optional relay or a different provider/key.                                       |
-| Actions sees no keys                   | `AI_KEYS_JSON` must be a JSON array of active keys, not a quoted JSON string. Update it after key changes.                                                        |
-| Actions does not run on time           | Cron is best-effort, default-branch-only, serialized, and can be disabled on inactive/forked repositories. Run manually and inspect job logs.                     |
-| Reply on Google but not in Sheets      | Sync the business. Do not manually repost: the runner checks the remote reply on the next run.                                                                    |
-| Demo data appears instead of live data | Use “Set up my workspace.” Demo has its own browser-local sample store.                                                                                           |
+```bash
+PUBLIC_SITE_URL=https://YOUR_PUBLIC_SITE/ npm run verify:live
+```
 
-## Files
+With `ADMIN_PASSWORD` privately supplied, the script also verifies authenticated routes on the published site. It checks the actual Pages response, backend URL, CORS, D1/queue/authentication readiness, current headline, mobile overflow, and browser exceptions.
+
+A full live integration sign-off additionally requires an authorized business, working Google approval/credentials, a real selected AI model, a verified notification sender, and deliberate approval to post an eligible owner reply. Do not create a false customer review to exercise the flow. Record observed results separately from isolated checks. No deployment or provider success is claimed solely because code builds.
+
+## Source map
 
 ```text
-index.html             public landing page
-login.html             local seven-day password gate
-dashboard.html         overview and business management
-business.html          per-location / unified review inbox
-settings.html          Google, AI, automation, secrets, account
-callback.html          one-time OAuth code callback
-app.js / auth.js       browser controllers and synchronous route guards
-styles.css / assets/   design system, brand art, font/icon fallbacks
-lib/                   shared schema, REST APIs, AI rotation, safe operations
-data/demo.js           explicitly sample-only interactive fixtures
-scripts/sync-reviews.js
-scripts/auto-reply.js
-scripts/get-token.js
-scripts/apps-script.gs optional AI relay
-scripts/lib/           OAuth, SDK providers, Actions orchestration, test browser
-.github/workflows/     sync, reply, checks, optional Pages deployment
-package.json / package-lock.json
-tests/ / playwright.config.js
+index.html / login.html                 public product and sign-in
+ dashboard.html / business.html        business and review workspace
+ settings.html / notifications.html    connection, AI, automation, billing alerts
+ app.js / auth.js                       frontend controller and route gate
+ runtime-config.js / service-worker.js  public endpoint and browser push
+ backend/index.js                      authenticated Worker API and handlers
+ backend/lib/                          vault, providers, jobs, notifications
+ backend/migrations/0001.sql            D1 schema
+ wrangler.jsonc                        Worker and cron defaults
+ scripts/                              build, provision, publish, verification
+ checks/                               isolated verification
+ .github/workflows/                    verification and release publishing only
 ```
-
-The landing dashboard/review preview and perspective quotes are explicitly illustrative, not verified customer testimonials or live service metrics. Inter and Lucide licenses are included with the local assets.

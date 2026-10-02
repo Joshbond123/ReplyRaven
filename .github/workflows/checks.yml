@@ -1,19 +1,24 @@
-name: Checks
+name: Verify ReplyRaven
 on:
   push:
   pull_request:
 permissions:
   contents: read
 jobs:
-  test:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
       - run: npm ci
       - run: npm run format:check
-      - run: npm test
-      - run: npm run test:e2e
+      - run: npm run verify
+      - run: npm run verify:browser
+      - run: npm run verify:bundle
+      - run: npm audit --audit-level=high
+      - run: npm run build
+        env:
+          CLOUDFLARE_WORKER_URL: /api

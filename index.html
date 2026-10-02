@@ -1,19 +1,18 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <title>ReplyRaven · AI review replies in your brand voice</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="ReplyRaven is your calm, intelligent workspace for Google reviews. Unlimited locations. Thoughtful AI replies. Your own Google Sheet."
+      content="ReplyRaven learns your brand voice and turns Google reviews into thoughtful owner replies. Manage businesses, billing, and notifications in one workspace."
     />
     <meta name="theme-color" content="#7c5ce5" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <title>A better impression · ReplyRaven</title>
     <link rel="icon" type="image/svg+xml" href="assets/raven.svg" />
+    <script src="runtime-config.js"></script>
     <script src="auth.js" data-page="landing"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
       if (window.tailwind)
@@ -23,7 +22,6 @@
         };
     </script>
     <script defer src="assets/lucide.min.js"></script>
-    <script async src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="app.js"></script>
   </head>
@@ -34,382 +32,226 @@
         ><img src="assets/raven.svg" alt="" width="40" height="40" /><span>Reply<span>Raven</span></span></a
       >
       <nav class="landing-nav-links" aria-label="Main navigation">
-        <a href="#features">Product</a><a href="#how-it-works">How it works</a><a href="#pricing">Pricing</a>
+        <a href="#problem">Why ReplyRaven</a><a href="#solution">Product</a
+        ><a href="#how-it-works">How it works</a>
       </nav>
       <div class="landing-nav-actions">
         <button class="icon-btn" data-action="theme" aria-label="Switch color theme">
-          <i data-lucide="moon" class="icon" aria-hidden="true"></i></button
+          <i data-lucide="moon" class="icon"></i></button
         ><a class="plain-link" href="login.html">Sign in</a
         ><a class="btn btn-primary" href="login.html"
-          >Get started <i data-lucide="arrow-up-right" class="icon icon-sm" aria-hidden="true"></i
+          >Get started <i data-lucide="arrow-up-right" class="icon icon-sm"></i
         ></a>
       </div>
     </header>
     <main id="main">
-      <section class="hero">
+      <section class="hero production-hero">
         <div class="hero-content reveal">
-          <div class="hero-pill">
-            <i data-lucide="sparkles" class="icon" aria-hidden="true"></i> A better way to care for your
-            reputation <i data-lucide="arrow-right" class="icon" aria-hidden="true"></i>
-          </div>
+          <div class="hero-pill"><i data-lucide="sparkles" class="icon"></i> Your brand. Every reply.</div>
           <h1>
-            Every review.<br />A <span class="gradient-text">better<br />impression.</span>
+            AI that auto-replies to Google reviews <span class="gradient-text">in your brand voice</span>
           </h1>
           <p class="hero-description">
-            Meet the calmer side of review management. Bring every Google business into one beautiful
-            workspace, and turn customer feedback into thoughtful replies.
+            You build a business people love. ReplyRaven learns what makes it yours, then turns new reviews
+            into personal, thoughtful replies—without another task on your list.
           </p>
           <div class="hero-ctas">
             <a class="btn btn-primary btn-lg" href="login.html"
-              >Get started for free
-              <i data-lucide="arrow-right" class="icon icon-sm" aria-hidden="true"></i></a
-            ><a class="btn btn-lg" href="login.html?demo=true"
-              ><i data-lucide="play" class="icon icon-sm" aria-hidden="true"></i> Explore the demo</a
-            >
-          </div>
-          <div class="hero-note">
-            <span><i data-lucide="check" class="icon" aria-hidden="true"></i> Unlimited businesses</span
-            ><span><i data-lucide="check" class="icon" aria-hidden="true"></i> No subscription</span
-            ><span><i data-lucide="check" class="icon" aria-hidden="true"></i> Your data stays yours</span>
-          </div>
-          <div class="hero-social">
-            <div class="mini-avatars" aria-hidden="true">
-              <div class="mini-avatar">SM</div>
-              <div class="mini-avatar">JC</div>
-              <div class="mini-avatar">AK</div>
-              <div class="mini-avatar">RL</div>
-            </div>
-            <div>
-              <strong>Big care for every local business.</strong>
-              <p>Built for owners, managers, and the teams behind them.</p>
-            </div>
-          </div>
-        </div>
-        <div class="hero-visual reveal" aria-label="An illustrative ReplyRaven dashboard preview">
-          <div class="preview-window">
-            <div class="browser-bar">
-              <span class="browser-dot"></span><span class="browser-dot"></span
-              ><span class="browser-dot"></span
-              ><span class="browser-address"
-                ><i data-lucide="lock" class="icon" aria-hidden="true"></i> replyraven / your workspace</span
-              >
-            </div>
-            <img
-              id="dashboard-preview"
-              class="hero-preview-image"
-              src="assets/dashboard-preview.png"
-              alt="Illustrative ReplyRaven dashboard: six businesses, review activity, and AI replies."
-              width="1250"
-              height="812"
-              fetchpriority="high"
-            />
-          </div>
-          <div class="floating-card float-success">
-            <span class="stat-icon"><i data-lucide="check-check" class="icon" aria-hidden="true"></i></span>
-            <div>
-              <strong>One less thing on your list.</strong>
-              <p>A thoughtful reply, sent automatically.</p>
-            </div>
-            <span class="badge badge-green">Auto-replied</span>
-          </div>
-          <div class="floating-card float-review">
-            <div class="flex items-center gap-2">
-              <span class="avatar">SM</span>
-              <div>
-                <strong>Sophie M.</strong
-                ><span class="stars"
-                  ><i data-lucide="star" class="icon" aria-hidden="true"></i
-                  ><i data-lucide="star" class="icon" aria-hidden="true"></i
-                  ><i data-lucide="star" class="icon" aria-hidden="true"></i
-                  ><i data-lucide="star" class="icon" aria-hidden="true"></i
-                  ><i data-lucide="star" class="icon" aria-hidden="true"></i
-                ></span>
-              </div>
-            </div>
-            <p>“Such a lovely experience! The team made us feel welcome from the moment we walked in.”</p>
-            <span class="small">Illustrative review · Willow & Oak Café</span>
-          </div>
-        </div>
-      </section>
-      <div class="audience-strip">
-        <p>For the places that make a neighborhood feel like home</p>
-        <div class="audience-types">
-          <span class="audience-type"
-            ><i data-lucide="coffee" class="icon" aria-hidden="true"></i> Coffee shops</span
-          ><span class="audience-type"
-            ><i data-lucide="flower-2" class="icon" aria-hidden="true"></i> Dental studios</span
-          ><span class="audience-type"
-            ><i data-lucide="utensils-crossed" class="icon" aria-hidden="true"></i> Restaurants</span
-          ><span class="audience-type"
-            ><i data-lucide="sparkles" class="icon" aria-hidden="true"></i> Beauty & wellness</span
-          ><span class="audience-type"
-            ><i data-lucide="house" class="icon" aria-hidden="true"></i> Local services</span
-          >
-        </div>
-      </div>
-      <section class="marketing-section" id="features">
-        <div class="section-intro">
-          <div class="eyebrow">Less busywork. More connection.</div>
-          <h2>A thoughtful reply.<br />A whole lot less effort.</h2>
-          <p>Everything you need to keep your Google reputation healthy. Nothing you don't.</p>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <div class="feature-icon"><i data-lucide="scan-line" class="icon" aria-hidden="true"></i></div>
-            <h3>Every business. One click.</h3>
-            <p>
-              Scan your Google manager account and find all the locations you can manage. Add what you need.
-              Never pay per location.
-            </p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon"><i data-lucide="sparkles" class="icon" aria-hidden="true"></i></div>
-            <h3>Replies with a human touch.</h3>
-            <p>
-              Give 4–5 star reviews a warm, on-brand AI response. Keep lower-star feedback in your inbox for
-              personal attention.
-            </p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon"><i data-lucide="repeat-2" class="icon" aria-hidden="true"></i></div>
-            <h3>More keys. Fewer interruptions.</h3>
-            <p>
-              Rotate between OpenAI, Gemini, Anthropic, and Groq. Automatic failover keeps a rate limit from
-              becoming a roadblock.
-            </p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon"><i data-lucide="sheet" class="icon" aria-hidden="true"></i></div>
-            <h3>Your sheet. Your source of truth.</h3>
-            <p>
-              Businesses, reviews, settings, and activity live in your Google Sheet. No hidden database. No
-              vendor lock-in.
-            </p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon"><i data-lucide="workflow" class="icon" aria-hidden="true"></i></div>
-            <h3>Always working in the background.</h3>
-            <p>
-              GitHub Actions checks reviews every 15 minutes and runs replies every 30. Your workspace works
-              even when your tab is closed.
-            </p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon">
-              <i data-lucide="sliders-horizontal" class="icon" aria-hidden="true"></i>
-            </div>
-            <h3>You’re always in control.</h3>
-            <p>
-              Choose which businesses auto-reply, customize your voice, and review every response. Your
-              reputation, your rules.
-            </p>
-          </article>
-        </div>
-        <div class="marketing-metrics">
-          <div>
-            <strong><span data-counter="0">0</span> <span>limits</span></strong>
-            <p>on the businesses you add</p>
-          </div>
-          <div>
-            <strong><span data-counter="15">15</span> min</strong>
-            <p>scheduled review syncs</p>
-          </div>
-          <div>
-            <strong><span data-counter="100">100</span>% <span>yours</span></strong>
-            <p>your sheet, your keys, your data</p>
-          </div>
-        </div>
-      </section>
-      <section class="how-section" id="how-it-works">
-        <div class="marketing-section">
-          <div class="section-intro">
-            <div class="eyebrow">From setup to peace of mind</div>
-            <h2>Make room for what matters.</h2>
-            <p>Three simple steps to a more connected customer experience.</p>
-          </div>
-          <div class="steps-grid">
-            <article class="how-step">
-              <div class="how-number">01</div>
-              <h3>Connect your Google account</h3>
-              <p>
-                Link your manager account and private Google Sheet. Your data stays in a place you already
-                know.
-              </p>
-            </article>
-            <article class="how-step">
-              <div class="how-number">02</div>
-              <h3>Bring your businesses together</h3>
-              <p>Scan for the locations you manage, then pick which ones to add to your workspace.</p>
-            </article>
-            <article class="how-step">
-              <div class="how-number">03</div>
-              <h3>Let thoughtful replies flow</h3>
-              <p>
-                Add your AI keys, choose your tone, and enable GitHub Actions. You take care of business. We
-                take care of the follow-up.
-              </p>
-            </article>
-          </div>
-        </div>
-      </section>
-      <section class="marketing-section">
-        <div class="section-intro">
-          <div class="eyebrow">Built around real-world workflows</div>
-          <h2>Small details. Big difference.</h2>
-          <p>A calmer day for everyone who cares about the customer experience.</p>
-        </div>
-        <div class="testimonial-grid">
-          <article class="testimonial">
-            <span class="stars"
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-            ></span>
-            <blockquote>
-              “A thank-you for every kind word, without another thing to remember at the end of a busy day.”
-            </blockquote>
-            <div class="flex items-center gap-3">
-              <span class="avatar">SM</span>
-              <div>
-                <strong>The local café owner</strong><small>One business. Every customer matters.</small>
-              </div>
-            </div>
-          </article>
-          <article class="testimonial">
-            <span class="stars"
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-            ></span>
-            <blockquote>
-              “Finally, a way to see which locations need attention without jumping between a dozen tabs.”
-            </blockquote>
-            <div class="flex items-center gap-3">
-              <span class="avatar">JC</span>
-              <div>
-                <strong>The multi-location manager</strong><small>One workspace. All your locations.</small>
-              </div>
-            </div>
-          </article>
-          <article class="testimonial">
-            <span class="stars"
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-              ><i data-lucide="star" class="icon" aria-hidden="true"></i
-            ></span>
-            <blockquote>
-              “A review workflow we can customize, own, and keep transparent for every business we look
-              after.”
-            </blockquote>
-            <div class="flex items-center gap-3">
-              <span class="avatar">AK</span>
-              <div><strong>The agency team</strong><small>Your client data. Your own sheet.</small></div>
-            </div>
-          </article>
-        </div>
-        <p class="illustrative-label">
-          Illustrative perspectives, not verified customer testimonials. Try the demo and see the workflow for
-          yourself.
-        </p>
-      </section>
-      <section class="marketing-section" id="pricing" style="padding-top: 25px">
-        <div class="section-intro">
-          <div class="eyebrow">Premium experience. No platform fee.</div>
-          <h2>Your reputation isn't a subscription.</h2>
-          <p>Self-host ReplyRaven on GitHub Pages. Start small. Grow without a per-location price tag.</p>
-        </div>
-        <div class="pricing-panel">
-          <div class="pricing-main">
-            <span class="badge badge-purple"
-              ><i data-lucide="sparkles" class="icon icon-sm" aria-hidden="true"></i> The everything
-              plan</span
-            >
-            <h3>Your own workspace</h3>
-            <div class="price">$0 <span>/ platform fee</span></div>
-            <p>All the features. All your businesses.<br />Self-hosted and entirely in your control.</p>
-            <a class="btn btn-primary" href="login.html"
-              >Get started for free <i data-lucide="arrow-right" class="icon icon-sm" aria-hidden="true"></i
+              >Open your workspace <i data-lucide="arrow-right" class="icon"></i></a
+            ><a class="btn btn-lg" href="#how-it-works"
+              >See how it works <i data-lucide="arrow-down" class="icon"></i
             ></a>
           </div>
-          <div class="pricing-features">
-            <div>
-              <i data-lucide="check" class="icon" aria-hidden="true"></i> Unlimited Google Business locations
+          <div class="hero-note">
+            <span><i data-lucide="check" class="icon"></i> Brand-aware replies</span
+            ><span><i data-lucide="check" class="icon"></i> Multiple businesses</span
+            ><span><i data-lucide="check" class="icon"></i> You stay in control</span>
+          </div>
+        </div>
+        <div class="hero-visual brand-flow-visual reveal">
+          <div class="voice-orbit">
+            <div class="orbit-ring ring-one"></div>
+            <div class="orbit-ring ring-two"></div>
+            <div class="raven-core">
+              <img src="assets/raven.svg" alt="ReplyRaven" width="88" height="88" /><span
+                >Your voice.<br />On autopilot.</span
+              >
             </div>
-            <div>
-              <i data-lucide="check" class="icon" aria-hidden="true"></i> AI replies with multi-provider key
-              rotation
+            <div class="flow-chip chip-review">
+              <span class="stat-icon"><i data-lucide="messages-square" class="icon"></i></span>
+              <div>
+                <strong>A new Google review</strong>
+                <p>A chance to make a lasting impression.</p>
+              </div>
             </div>
-            <div>
-              <i data-lucide="check" class="icon" aria-hidden="true"></i> Manual replies & a unified review
-              inbox
+            <div class="flow-chip chip-voice">
+              <span class="stat-icon"><i data-lucide="fingerprint" class="icon"></i></span>
+              <div>
+                <strong>A voice that feels like you</strong>
+                <p>Learned from your business. Editable by you.</p>
+              </div>
             </div>
-            <div>
-              <i data-lucide="check" class="icon" aria-hidden="true"></i> Your own Google Sheets database
+            <div class="flow-chip chip-reply">
+              <span class="stat-icon green"><i data-lucide="check-check" class="icon"></i></span>
+              <div>
+                <strong>A thoughtful reply</strong>
+                <p>Existing owner replies are left untouched.</p>
+              </div>
             </div>
-            <div>
-              <i data-lucide="check" class="icon" aria-hidden="true"></i> Scheduled syncs & replies with
-              GitHub Actions
-            </div>
-            <div>
-              <i data-lucide="check" class="icon" aria-hidden="true"></i> Light and dark mode, on every screen
-            </div>
-            <small
-              >Google API approval and setup are required. AI provider usage and any GitHub Actions charges
-              are billed by those services, not ReplyRaven. Cron schedules are best-effort.</small
-            >
+            <div class="voice-dots"><span></span><span></span><span></span></div>
           </div>
         </div>
       </section>
-      <section class="final-cta">
-        <h2>Every customer deserves to be heard.</h2>
-        <p>Give your reviews a little more care. Give yourself a little more time.</p>
+      <section id="problem" class="landing-section">
+        <div class="section-heading">
+          <div class="eyebrow">Good feedback deserves a conversation</div>
+          <h2>Unanswered reviews.<br /><span class="gradient-text">Lost connections.</span></h2>
+          <p>
+            Customers notice when a business cares. A review left unanswered is an opportunity lost—to say
+            thank you, show up, and earn the next visit.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="clock-3" class="icon"></i></span>
+            <h3>Your day is already full.</h3>
+            <p>
+              Checking each profile, reading every review, and finding the right words takes time away from
+              your business.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="layers-3" class="icon"></i></span>
+            <h3>More locations. More to miss.</h3>
+            <p>
+              Every business has its own voice. Keeping replies personal across multiple profiles shouldn't
+              mean more tabs and late nights.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="message-circle-heart" class="icon"></i></span>
+            <h3>Generic replies aren't you.</h3>
+            <p>
+              Your customers deserve more than a canned thank-you. Your reputation grows through real,
+              recognizable care.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="solution" class="landing-section solution-section">
+        <div class="section-heading">
+          <div class="eyebrow">Meet your reputation co-pilot</div>
+          <h2>A thoughtful reply.<br />A whole lot less effort.</h2>
+          <p>
+            ReplyRaven brings your Google businesses together and learns the way each one speaks. You set the
+            rules. It handles the follow-up.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="fingerprint" class="icon"></i></span>
+            <h3>It learns your business.</h3>
+            <p>
+              Your profile, website, and recent reviews shape a brand voice you can inspect, edit, and refine.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="sparkles" class="icon"></i></span>
+            <h3>Personal. Not predictable.</h3>
+            <p>
+              New 4–5 star reviews get thoughtful replies, with a natural delay. Sensitive reviews stay in
+              your hands.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="shield-check" class="icon"></i></span>
+            <h3>Your replies stay yours.</h3>
+            <p>
+              Replies already on Google are never intentionally replaced by automation. Previous reviews are
+              handled only when you opt in.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="wallet" class="icon"></i></span>
+            <h3>Billing that respects your rules.</h3>
+            <p>
+              Optional trials and subscriptions pause automatic replies when a period ends. Mark payment
+              received to resume.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="bell-ring" class="icon"></i></span>
+            <h3>Know what needs attention.</h3>
+            <p>
+              Connection reminders, payment alerts, and reply updates arrive through the channels you choose.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="repeat-2" class="icon"></i></span>
+            <h3>Intelligence with a backup plan.</h3>
+            <p>
+              Use OpenAI, Anthropic, Gemini, or Groq. Multiple keys rotate automatically and show their
+              current health.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="how-it-works" class="landing-section">
+        <div class="section-heading">
+          <div class="eyebrow">From setup to thoughtful follow-up</div>
+          <h2>Three steps.<br /><span class="gradient-text">One less thing to manage.</span></h2>
+        </div>
+        <div class="steps-grid">
+          <article class="step-card reveal">
+            <span class="step-number">01</span>
+            <h3>Connect your Google account.</h3>
+            <p>
+              Link the account that manages your business profiles. Your credentials are stored securely in
+              your backend.
+            </p>
+          </article>
+          <article class="step-card reveal">
+            <span class="step-number">02</span>
+            <h3>Add a business. Find its voice.</h3>
+            <p>
+              ReplyRaven learns the brand from your public business information and recent reviews. Review
+              what it learned and make it yours.
+            </p>
+          </article>
+          <article class="step-card reveal">
+            <span class="step-number">03</span>
+            <h3>Set your rules. Let it reply.</h3>
+            <p>
+              Choose the check interval, enable each business, and keep billing guardrails optional. Your
+              workspace shows what happened.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section class="landing-final">
+        <div class="eyebrow">Every customer deserves to be heard</div>
+        <h2>A better reputation starts<br />with a better reply.</h2>
+        <p>Bring your businesses into ReplyRaven and make every follow-up feel like you.</p>
         <a class="btn btn-primary btn-lg" href="login.html"
-          >Make a better impression <i data-lucide="arrow-right" class="icon icon-sm" aria-hidden="true"></i
+          >Get started with ReplyRaven <i data-lucide="arrow-up-right" class="icon"></i
         ></a>
       </section>
     </main>
     <footer class="landing-footer">
-      <div class="landing-footer-top">
-        <div>
-          <a class="logo" href="index.html" aria-label="ReplyRaven home"
-            ><img src="assets/raven.svg" alt="" width="40" height="40" /><span
-              >Reply<span>Raven</span></span
-            ></a
-          >
-          <p>A little care. A lasting impression.</p>
-        </div>
-        <div class="footer-links">
-          <a href="#features">Product</a
-          ><a
-            href="https://github.com/Joshbond123/ReplyRaven#readme"
-            target="_blank"
-            rel="noopener noreferrer"
-            >Setup guide</a
-          ><a href="https://github.com/Joshbond123/ReplyRaven" target="_blank" rel="noopener noreferrer"
-            >GitHub ↗</a
-          >
-        </div>
-      </div>
-      <div class="landing-footer-bottom">
-        <span>© <span data-year>2026</span> ReplyRaven. Built for better conversations.</span
-        ><span
-          ><i data-lucide="shield-check" class="icon" aria-hidden="true"></i> Self-hosted. Sheets-powered.
-          Always yours.</span
+      <div>
+        <a class="logo" href="index.html" aria-label="ReplyRaven home"
+          ><img src="assets/raven.svg" alt="" width="40" height="40" /><span>Reply<span>Raven</span></span></a
         >
+        <p>Your voice. Your customers. Your ReplyRaven.</p>
       </div>
+      <nav aria-label="Footer">
+        <a href="#solution">Product</a><a href="#how-it-works">How it works</a
+        ><a href="login.html">Workspace</a>
+      </nav>
+      <span>© <span id="footer-year"></span> ReplyRaven</span>
     </footer>
     <div id="modal-root"></div>
-    <div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
-    <noscript
-      ><div class="notice warning">
-        ReplyRaven needs JavaScript to connect Google and manage reviews. Please enable it in your browser.
-      </div></noscript
-    >
+    <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+    <noscript><div class="notice warning">Enable JavaScript to use ReplyRaven.</div></noscript>
   </body>
 </html>
