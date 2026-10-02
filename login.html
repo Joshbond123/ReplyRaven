@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Sign in · ReplyRaven</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ReplyRaven learns your brand voice and turns Google reviews into thoughtful owner replies. Manage businesses, billing, and notifications in one workspace."
+    />
+    <meta name="theme-color" content="#7c5ce5" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link rel="icon" type="image/svg+xml" href="assets/raven.svg" />
+    <script src="runtime-config.js"></script>
+    <script src="auth.js" data-page="login"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script>
+      if (window.tailwind)
+        tailwind.config = {
+          darkMode: 'class',
+          theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } },
+        };
+    </script>
+    <script defer src="assets/lucide.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body class="auth-page" data-page="login">
+    <a class="skip-link" href="#main">Skip to sign in</a>
+    <section class="login-story">
+      <a class="logo" href="index.html" aria-label="ReplyRaven home"
+        ><img src="assets/raven.svg" alt="" width="40" height="40" /><span>Reply<span>Raven</span></span></a
+      >
+      <div class="story-content">
+        <div class="eyebrow">Your reputation, thoughtfully managed</div>
+        <h2>Keep your voice.<br />Grow your reputation.<br /><span>Let ReplyRaven reply.</span></h2>
+        <p>
+          A workspace built for the businesses you manage. Thoughtful review replies, clear payment controls,
+          and timely notifications.
+        </p>
+        <div class="auth-flow">
+          <div><i data-lucide="message-square-heart"></i><span>Customer feedback</span></div>
+          <i data-lucide="arrow-down"></i>
+          <div><i data-lucide="fingerprint"></i><span>Your brand voice</span></div>
+          <i data-lucide="arrow-down"></i>
+          <div><i data-lucide="sparkles"></i><span>A thoughtful owner reply</span></div>
+        </div>
+      </div>
+      <p class="story-footer">
+        <i data-lucide="shield-check" class="icon"></i> Your credentials stay in your encrypted backend.
+      </p>
+    </section>
+    <main id="main" class="login-form-side">
+      <button class="icon-btn login-theme" data-action="theme" aria-label="Switch color theme">
+        <i data-lucide="moon" class="icon"></i>
+      </button>
+      <form id="login-form" class="login-form" method="post">
+        <a class="logo" href="index.html" aria-label="ReplyRaven home"
+          ><img src="assets/raven.svg" alt="" width="40" height="40" /><span>Reply<span>Raven</span></span></a
+        >
+        <div class="eyebrow">Your next great impression starts here</div>
+        <h1>Welcome back.</h1>
+        <p class="login-subtitle">Sign in to your ReplyRaven workspace.</p>
+        <div class="field">
+          <label for="login-password">Workspace password</label>
+          <div class="secret-field">
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              required
+              autocomplete="current-password"
+              placeholder="Enter your workspace password"
+            /><button type="button" class="icon-btn" data-reveal="login-password" aria-label="Show password">
+              <i data-lucide="eye" class="icon"></i>
+            </button>
+          </div>
+        </div>
+        <p id="login-error" class="login-error" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primary btn-lg w-full">
+          Sign in <i data-lucide="arrow-right" class="icon"></i>
+        </button>
+        <p class="login-footnote">
+          Authentication is verified by your private backend. Ask your workspace owner if you need access.
+        </p>
+      </form>
+      <a class="login-back" href="index.html"
+        ><i data-lucide="arrow-left" class="icon"></i> Back to ReplyRaven</a
+      >
+    </main>
+    <div id="modal-root"></div>
+    <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+    <noscript><div class="notice warning">Enable JavaScript to use ReplyRaven.</div></noscript>
+  </body>
+</html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>ReplyRaven · AI review replies in your brand voice</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ReplyRaven learns your brand voice and turns Google reviews into thoughtful owner replies. Manage businesses, billing, and notifications in one workspace."
+    />
+    <meta name="theme-color" content="#7c5ce5" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link rel="icon" type="image/svg+xml" href="assets/raven.svg" />
+    <script src="runtime-config.js"></script>
+    <script src="auth.js" data-page="landing"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script>
+      if (window.tailwind)
+        tailwind.config = {
+          darkMode: 'class',
+          theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } },
+        };
+    </script>
+    <script defer src="assets/lucide.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body class="landing" data-page="landing">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="landing-nav">
+      <a class="logo" href="index.html" aria-label="ReplyRaven home"
+        ><img src="assets/raven.svg" alt="" width="40" height="40" /><span>Reply<span>Raven</span></span></a
+      >
+      <nav class="landing-nav-links" aria-label="Main navigation">
+        <a href="#problem">Why ReplyRaven</a><a href="#solution">Product</a
+        ><a href="#how-it-works">How it works</a>
+      </nav>
+      <div class="landing-nav-actions">
+        <button class="icon-btn" data-action="theme" aria-label="Switch color theme">
+          <i data-lucide="moon" class="icon"></i></button
+        ><a class="plain-link" href="login.html">Sign in</a
+        ><a class="btn btn-primary" href="login.html"
+          >Get started <i data-lucide="arrow-up-right" class="icon icon-sm"></i
+        ></a>
+      </div>
+    </header>
+    <main id="main">
+      <section class="hero production-hero">
+        <div class="hero-content reveal">
+          <div class="hero-pill"><i data-lucide="sparkles" class="icon"></i> Your brand. Every reply.</div>
+          <h1>
+            AI that auto-replies to Google reviews <span class="gradient-text">in your brand voice</span>
+          </h1>
+          <p class="hero-description">
+            You build a business people love. ReplyRaven learns what makes it yours, then turns new reviews
+            into personal, thoughtful replies—without another task on your list.
+          </p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary btn-lg" href="login.html"
+              >Open your workspace <i data-lucide="arrow-right" class="icon"></i></a
+            ><a class="btn btn-lg" href="#how-it-works"
+              >See how it works <i data-lucide="arrow-down" class="icon"></i
+            ></a>
+          </div>
+          <div class="hero-note">
+            <span><i data-lucide="check" class="icon"></i> Brand-aware replies</span
+            ><span><i data-lucide="check" class="icon"></i> Multiple businesses</span
+            ><span><i data-lucide="check" class="icon"></i> You stay in control</span>
+          </div>
+        </div>
+        <div class="hero-visual brand-flow-visual reveal">
+          <div class="voice-orbit">
+            <div class="orbit-ring ring-one"></div>
+            <div class="orbit-ring ring-two"></div>
+            <div class="raven-core">
+              <img src="assets/raven.svg" alt="ReplyRaven" width="88" height="88" /><span
+                >Your voice.<br />On autopilot.</span
+              >
+            </div>
+            <div class="flow-chip chip-review">
+              <span class="stat-icon"><i data-lucide="messages-square" class="icon"></i></span>
+              <div>
+                <strong>A new Google review</strong>
+                <p>A chance to make a lasting impression.</p>
+              </div>
+            </div>
+            <div class="flow-chip chip-voice">
+              <span class="stat-icon"><i data-lucide="fingerprint" class="icon"></i></span>
+              <div>
+                <strong>A voice that feels like you</strong>
+                <p>Learned from your business. Editable by you.</p>
+              </div>
+            </div>
+            <div class="flow-chip chip-reply">
+              <span class="stat-icon green"><i data-lucide="check-check" class="icon"></i></span>
+              <div>
+                <strong>A thoughtful reply</strong>
+                <p>Existing owner replies are left untouched.</p>
+              </div>
+            </div>
+            <div class="voice-dots"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+      </section>
+      <section id="problem" class="landing-section">
+        <div class="section-heading">
+          <div class="eyebrow">Good feedback deserves a conversation</div>
+          <h2>Unanswered reviews.<br /><span class="gradient-text">Lost connections.</span></h2>
+          <p>
+            Customers notice when a business cares. A review left unanswered is an opportunity lost—to say
+            thank you, show up, and earn the next visit.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="clock-3" class="icon"></i></span>
+            <h3>Your day is already full.</h3>
+            <p>
+              Checking each profile, reading every review, and finding the right words takes time away from
+              your business.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="layers-3" class="icon"></i></span>
+            <h3>More locations. More to miss.</h3>
+            <p>
+              Every business has its own voice. Keeping replies personal across multiple profiles shouldn't
+              mean more tabs and late nights.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="message-circle-heart" class="icon"></i></span>
+            <h3>Generic replies aren't you.</h3>
+            <p>
+              Your customers deserve more than a canned thank-you. Your reputation grows through real,
+              recognizable care.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="solution" class="landing-section solution-section">
+        <div class="section-heading">
+          <div class="eyebrow">Meet your reputation co-pilot</div>
+          <h2>A thoughtful reply.<br />A whole lot less effort.</h2>
+          <p>
+            ReplyRaven brings your Google businesses together and learns the way each one speaks. You set the
+            rules. It handles the follow-up.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="fingerprint" class="icon"></i></span>
+            <h3>It learns your business.</h3>
+            <p>
+              Your profile, website, and recent reviews shape a brand voice you can inspect, edit, and refine.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="sparkles" class="icon"></i></span>
+            <h3>Personal. Not predictable.</h3>
+            <p>
+              New 4–5 star reviews get thoughtful replies, with a natural delay. Sensitive reviews stay in
+              your hands.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="shield-check" class="icon"></i></span>
+            <h3>Your replies stay yours.</h3>
+            <p>
+              Replies already on Google are never intentionally replaced by automation. Previous reviews are
+              handled only when you opt in.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="wallet" class="icon"></i></span>
+            <h3>Billing that respects your rules.</h3>
+            <p>
+              Optional trials and subscriptions pause automatic replies when a period ends. Mark payment
+              received to resume.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="bell-ring" class="icon"></i></span>
+            <h3>Know what needs attention.</h3>
+            <p>
+              Connection reminders, payment alerts, and reply updates arrive through the channels you choose.
+            </p>
+          </article>
+          <article class="feature-card reveal">
+            <span class="feature-icon"><i data-lucide="repeat-2" class="icon"></i></span>
+            <h3>Intelligence with a backup plan.</h3>
+            <p>
+              Use OpenAI, Anthropic, Gemini, or Groq. Multiple keys rotate automatically and show their
+              current health.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="how-it-works" class="landing-section">
+        <div class="section-heading">
+          <div class="eyebrow">From setup to thoughtful follow-up</div>
+          <h2>Three steps.<br /><span class="gradient-text">One less thing to manage.</span></h2>
+        </div>
+        <div class="steps-grid">
+          <article class="step-card reveal">
+            <span class="step-number">01</span>
+            <h3>Connect your Google account.</h3>
+            <p>
+              Link the account that manages your business profiles. Your credentials are stored securely in
+              your backend.
+            </p>
+          </article>
+          <article class="step-card reveal">
+            <span class="step-number">02</span>
+            <h3>Add a business. Find its voice.</h3>
+            <p>
+              ReplyRaven learns the brand from your public business information and recent reviews. Review
+              what it learned and make it yours.
+            </p>
+          </article>
+          <article class="step-card reveal">
+            <span class="step-number">03</span>
+            <h3>Set your rules. Let it reply.</h3>
+            <p>
+              Choose the check interval, enable each business, and keep billing guardrails optional. Your
+              workspace shows what happened.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section class="landing-final">
+        <div class="eyebrow">Every customer deserves to be heard</div>
+        <h2>A better reputation starts<br />with a better reply.</h2>
+        <p>Bring your businesses into ReplyRaven and make every follow-up feel like you.</p>
+        <a class="btn btn-primary btn-lg" href="login.html"
+          >Get started with ReplyRaven <i data-lucide="arrow-up-right" class="icon"></i
+        ></a>
+      </section>
+    </main>
+    <footer class="landing-footer">
+      <div>
+        <a class="logo" href="index.html" aria-label="ReplyRaven home"
+          ><img src="assets/raven.svg" alt="" width="40" height="40" /><span>Reply<span>Raven</span></span></a
+        >
+        <p>Your voice. Your customers. Your ReplyRaven.</p>
+      </div>
+      <nav aria-label="Footer">
+        <a href="#solution">Product</a><a href="#how-it-works">How it works</a
+        ><a href="login.html">Workspace</a>
+      </nav>
+      <span>© <span id="footer-year"></span> ReplyRaven</span>
+    </footer>
+    <div id="modal-root"></div>
+    <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+    <noscript><div class="notice warning">Enable JavaScript to use ReplyRaven.</div></noscript>
+  </body>
+</html>
