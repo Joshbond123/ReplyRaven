@@ -26,6 +26,29 @@ export async function remoteJSON(url, options = {}, service = 'Remote service') 
       error.message = 'Reconnect Google: the refresh token was revoked or has expired.';
       error.code = 'google_expired';
     }
+    // Google Business Profile quota / rate-limit details
+    if (response.status === 429) {
+      const details = Array.isArray(data?.error?.details) ? data.error.details : [];
+      const info = details.find((d) => d['@type']?.includes('ErrorInfo')) || {};
+      const meta = info.metadata || {};
+      const limitValue = meta.quota_limit_value;
+      const serviceName = meta.service || '';
+      if (limitValue === '0' || limitValue === 0) {
+        error.message =
+          'Google Business Profile API quota is 0 for this Cloud project. Enable the “My Business Account Management API” and “My Business Business Information API” in Google Cloud Console, then request quota (or wait for default quota). Project: 893046235703.';
+        error.code = 'google_quota_zero';
+      } else {
+        error.message = `Google rate-limited Business Profile requests (${serviceName || 'API'}). Wait about ${error.retryAfter}s and try again.`;
+        error.code = 'google_rate_limited';
+      }
+    } else if (response.status === 403 && /business|Google/i.test(service)) {
+      const msg = data?.error?.message || '';
+      if (/API has not been used|disabled|not enabled/i.test(msg)) {
+        error.message =
+          'A required Google Business Profile API is not enabled on the Cloud project. Enable My Business Account Management API and My Business Business Information API, then retry.';
+        error.code = 'google_api_disabled';
+      }
+    }
     throw error;
   }
   return data;
