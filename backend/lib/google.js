@@ -92,19 +92,52 @@ export class GoogleClient {
     return this.call(`https://mybusinessaccountmanagement.googleapis.com/v1/accounts?${query}`);
   }
   async locations(account, pageToken = '') {
+    const accountId = identifier(account);
+    ensure(accountId, 'Google account ID is missing.');
     const query = new URLSearchParams({
       pageSize: '100',
-      readMask: 'name,title,storefrontAddress,websiteUri,categories,profile',
+      readMask: 'name,title,storefrontAddress,websiteUri,categories,profile,metadata',
     });
     if (pageToken) query.set('pageToken', pageToken);
-    return this.call(
-      `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${encodeURIComponent(identifier(account))}/locations?${query}`,
-    );
+    try {
+      return await this.call(
+        `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${encodeURIComponent(accountId)}/locations?${query}`,
+      );
+    } catch (error) {
+      // Managers sometimes fail with the full readMask — retry with a minimal mask.
+      if ([400, 403].includes(error.status)) {
+        const minimal = new URLSearchParams({
+          pageSize: '100',
+          readMask: 'name,title,storefrontAddress,websiteUri',
+        });
+        if (pageToken) minimal.set('pageToken', pageToken);
+        return this.call(
+          `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${encodeURIComponent(accountId)}/locations?${minimal}`,
+        );
+      }
+      throw error;
+    }
   }
   async profile(locationId) {
-    return this.call(
-      `https://mybusinessbusinessinformation.googleapis.com/v1/locations/${encodeURIComponent(identifier(locationId))}?readMask=name,title,storefrontAddress,websiteUri,categories,profile,regularHours`,
-    );
+    const id = identifier(locationId);
+    ensure(id, 'Google location ID is missing.');
+    const masks = [
+      'name,title,storefrontAddress,websiteUri,categories,profile,regularHours,metadata',
+      'name,title,storefrontAddress,websiteUri,categories,profile',
+      'name,title,storefrontAddress,websiteUri',
+    ];
+    let lastError;
+    for (const readMask of masks) {
+      try {
+        return await this.call(
+          `https://mybusinessbusinessinformation.googleapis.com/v1/locations/${encodeURIComponent(id)}?readMask=${encodeURIComponent(readMask)}`,
+        );
+      } catch (error) {
+        lastError = error;
+        if (![400, 403].includes(error.status)) throw error;
+      }
+    }
+    throw lastError;
   }
   reviewsURL(business, reviewId = '') {
     const account = identifier(business.google_account_id),
@@ -192,12 +225,25 @@ export async function discover(env, cursor = null) {
       accountToken: response.nextPageToken || '',
       accounts: (response.accounts || []).map((account) => ({
         id: account.name,
-        name: account.accountName || '',
+        name: account.accountName || account.name || '',
+        type: account.type || account.organizationInfo?.registeredDomain || '',
+        role: account.role || account.permissionLevel || '',
       })),
       index: 0,
       locationToken: '',
     };
-    if (!state.accounts.length) return { locations: [], cursor: null, errors: [] };
+    if (!state.accounts.length)
+      return {
+        locations: [],
+        cursor: null,
+        errors: [
+          {
+            account: 'Google',
+            message:
+              'No Google Business accounts were returned. Confirm the connected Google account is Owner or Manager on at least one Business Profile, and that the Business Profile APIs are enabled on the Google Cloud project.',
+          },
+        ],
+      };
   }
   const account = state.accounts[state.index];
   let response,
@@ -206,9 +252,16 @@ export async function discover(env, cursor = null) {
     response = await client.locations(account.id, state.locationToken || '');
   } catch (error) {
     if (error.code === 'google_expired') throw error;
+    const status = error.status || 502;
+    const hint =
+      status === 403
+        ? ' Manager access may be limited, or the Business Information API is not enabled for this project.'
+        : status === 404
+          ? ' This account may not expose locations via the Business Information API.'
+          : '';
     errors.push({
       account: account.name || account.id,
-      message: `Locations could not be read (HTTP ${error.status || 502}).`,
+      message: `Locations could not be read for this account (HTTP ${status}).${hint}`,
     });
     response = {};
   }

@@ -16,7 +16,15 @@ import {
   safeMessage,
 } from './lib/core.js';
 import { all, business, getSetting, log, one, run, setSetting } from './lib/db.js';
-import { addKey, draftReply, modelsFor, normalizeVoice, publicKey } from './lib/ai.js';
+import {
+  addKey,
+  draftReply,
+  ensureEnvKeys,
+  envApiKeys,
+  modelsFor,
+  normalizeVoice,
+  publicKey,
+} from './lib/ai.js';
 import {
   discover,
   googleClient,
@@ -196,7 +204,9 @@ async function connectionStatus(env) {
   };
 }
 async function settingsResponse(env) {
+  await ensureEnvKeys(env);
   const automation = normalizeAutomation(await getSetting(env, 'automation', DEFAULT_AUTOMATION));
+  const envKeys = envApiKeys(env);
   return {
     google: await connectionStatus(env),
     automation,
@@ -206,7 +216,8 @@ async function settingsResponse(env) {
       email: Boolean((env.RESEND_API_KEY || env.EMAIL) && env.EMAIL_FROM),
       browser: Boolean(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY),
       queue: Boolean(env.JOBS),
-      stored_providers: PROVIDERS.filter((provider) => Boolean(env[provider.toUpperCase() + '_API_KEY'])),
+      stored_providers: [...new Set(envKeys.map((k) => k.provider))],
+      env_key_count: envKeys.length,
     },
     vapid_public_key: env.VAPID_PUBLIC_KEY || '',
   };
@@ -419,18 +430,25 @@ async function routes(request, env, ctx, url) {
   if (path === '/ai/models' && method === 'POST') {
     const body = await input(request);
     ensure(PROVIDERS.includes(body.provider), 'Choose a supported provider.');
-    const key = body.use_saved_key
-      ? await protectedValue(env, body.provider.toUpperCase() + '_API_KEY')
-      : body.api_key;
+    let key = body.api_key;
+    if (body.use_saved_key) {
+      const match = envApiKeys(env).find((entry) => entry.provider === body.provider);
+      key = match?.api_key || (await protectedValue(env, body.provider.toUpperCase() + '_API_KEY'));
+    }
     return { models: await modelsFor(body.provider, key) };
   }
-  if (path === '/ai/keys' && method === 'GET')
+  if (path === '/ai/keys' && method === 'GET') {
+    await ensureEnvKeys(env);
     return { keys: (await all(env, 'SELECT * FROM ai_keys ORDER BY created_at')).map(publicKey) };
+  }
   if (path === '/ai/keys' && method === 'POST') {
     const body = await input(request);
     ensure(PROVIDERS.includes(body.provider), 'Choose a supported provider.');
-    if (body.use_saved_key)
-      body.api_key = await protectedValue(env, body.provider.toUpperCase() + '_API_KEY');
+    if (body.use_saved_key) {
+      const match = envApiKeys(env).find((entry) => entry.provider === body.provider);
+      body.api_key =
+        match?.api_key || (await protectedValue(env, body.provider.toUpperCase() + '_API_KEY'));
+    }
     const key = await addKey(env, body);
     await log(env, 'ai_key_added', 'An encrypted AI key and an available model were saved.');
     return { key };
@@ -487,9 +505,25 @@ async function routes(request, env, ctx, url) {
       locationId = identifier(body.google_location_id),
       accountId = identifier(body.google_account_id);
     ensure(locationId && accountId, 'Choose an accessible Google business and account.');
-    const google = await googleClient(env),
-      profile = await google.profile(locationId),
+    const google = await googleClient(env);
+    let profile = null,
+      location;
+    try {
+      profile = await google.profile(locationId);
       location = normalizeLocation(profile, accountId);
+    } catch (error) {
+      // Managers sometimes cannot read the full profile; fall back to values from discovery.
+      if (![403, 404].includes(error.status)) throw error;
+      location = {
+        google_location_id: locationId,
+        google_account_id: accountId,
+        name: String(body.name || '').trim() || `Location ${locationId}`,
+        address: String(body.address || '').trim(),
+        website: String(body.website || '').trim(),
+        metadata: { manager_fallback: true, reason: error.message },
+      };
+      profile = location.metadata;
+    }
     ensure(
       !(await one(
         env,

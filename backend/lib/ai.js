@@ -2,6 +2,76 @@ import { AppError, PROVIDERS, ensure, parseJSON } from './core.js';
 import { all, one, run } from './db.js';
 import { open, seal } from './security.js';
 import { remoteJSON } from './google.js';
+
+/** Preferred default models when auto-importing env-backed keys. */
+const DEFAULT_MODELS = {
+  groq: 'llama-3.3-70b-versatile',
+  openai: 'gpt-4o-mini',
+  anthropic: 'claude-3-5-haiku-latest',
+  gemini: 'gemini-2.0-flash',
+};
+
+/**
+ * Collect every API key present in the Worker environment.
+ * Supports GROQ_API_KEY, GROQ_API_KEY_2, GROQ_API_KEY_3, OPENAI_API_KEY, etc.
+ */
+export function envApiKeys(env) {
+  const found = [];
+  for (const provider of PROVIDERS) {
+    const prefix = provider.toUpperCase() + '_API_KEY';
+    const primary = env[prefix];
+    if (typeof primary === 'string' && primary.trim().length >= 8) {
+      found.push({ provider, envKey: prefix, api_key: primary.trim() });
+    }
+    for (let n = 2; n <= 10; n++) {
+      const name = `${prefix}_${n}`;
+      const value = env[name];
+      if (typeof value === 'string' && value.trim().length >= 8) {
+        found.push({ provider, envKey: name, api_key: value.trim() });
+      }
+    }
+  }
+  return found;
+}
+
+/**
+ * Import any env-backed API keys that are not already stored in ai_keys.
+ * Keys are encrypted with the vault and appear in Settings like manually added ones.
+ */
+export async function ensureEnvKeys(env) {
+  const existing = await all(env, 'SELECT id, provider, suffix FROM ai_keys');
+  const known = new Set(existing.map((row) => `${row.provider}:${row.suffix}`));
+  const imported = [];
+  for (const entry of envApiKeys(env)) {
+    const suffix = entry.api_key.slice(-4);
+    if (known.has(`${entry.provider}:${suffix}`)) continue;
+    let model = DEFAULT_MODELS[entry.provider] || 'default';
+    try {
+      const models = await modelsFor(entry.provider, entry.api_key);
+      if (models.length) {
+        const preferred = models.find((m) => m.id === DEFAULT_MODELS[entry.provider]);
+        model = preferred?.id || models[0].id;
+      }
+    } catch {
+      // Keep default model; health check later will mark invalid keys.
+    }
+    const id = crypto.randomUUID();
+    await run(
+      env,
+      "INSERT INTO ai_keys(id,provider,ciphertext,suffix,model,enabled,health,created_at) VALUES(?,?,?,?,?,1,'active',?)",
+      id,
+      entry.provider,
+      await seal(env, entry.api_key, `ai:${id}`),
+      suffix,
+      model,
+      Date.now(),
+    );
+    known.add(`${entry.provider}:${suffix}`);
+    imported.push({ id, provider: entry.provider, suffix, model, source: entry.envKey });
+  }
+  return imported;
+}
+
 export async function modelsFor(provider, key) {
   ensure(PROVIDERS.includes(provider), 'Choose OpenAI, Anthropic, Gemini, or Groq.');
   ensure(typeof key === 'string' && key.trim().length >= 8 && key.length < 2000, 'Enter your API key.');
@@ -150,6 +220,7 @@ async function providerCompletion(key, secret, system, prompt, structured) {
   return response.choices?.[0]?.message?.content || '';
 }
 export async function generate(env, system, prompt, structured = false) {
+  await ensureEnvKeys(env);
   const keys = await all(
     env,
     "SELECT * FROM ai_keys WHERE enabled=1 AND health!='invalid' AND (cooldown_until IS NULL OR cooldown_until<=?) ORDER BY created_at,id",
